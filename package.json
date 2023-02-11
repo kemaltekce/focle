@@ -1,0 +1,26 @@
+{
+  "name": "focle",
+  "private": true,
+  "version": "0.0.0",
+  "main": "main.js",
+  "scripts": {
+    "vite:dev": "vite",
+    "vite:build": "vite build",
+    "vite:preview": "vite preview",
+    "electron:start": "electron .",
+    "dev": "npm run vite:build && concurrently -k \"vite build --watch --emptyOutDir false\" \"electron .\""
+  },
+  "dependencies": {
+    "@picocss/pico": "^1.5.7",
+    "concurrently": "^7.6.0",
+    "electron": "^22.2.0",
+    "electron-reload": "^2.0.0-alpha.1",
+    "onchange": "^7.1.0",
+    "vue": "^3.2.45"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.0.0",
+    "prettier": "2.8.3",
+    "vite": "^4.1.0"
+  }
+}
