@@ -1,7 +1,12 @@
-# Vue 3 + Vite
+<p align="center">
+  <img alt="focle logo" src="https://github.com/kemaltekce/focle/blob/main/src/assets/asterisk.svg" width="100">
+  </a>
+</p>
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+# focle
 
-## Recommended IDE Setup
+This is the code base for the focle app - a timer that supports your flexible focus.
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+## Development
+
+This project is build and developed with Electron, Vite, and Vue.
