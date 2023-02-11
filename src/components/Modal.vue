@@ -25,8 +25,18 @@
           @click="displayModal = !displayModal"
         >
           <div>
-            <img v-if="displayModal" src="../assets/arrow-down.svg" class="arrow" alt="arrow" />
-            <img v-else src="../assets/arrow-up.svg" class="arrow" alt="arrow" />
+            <img
+              v-if="displayModal"
+              src="../assets/arrow-down.svg"
+              class="arrow"
+              alt="arrow"
+            />
+            <img
+              v-else
+              src="../assets/arrow-up.svg"
+              class="arrow"
+              alt="arrow"
+            />
           </div>
         </div>
         <textarea

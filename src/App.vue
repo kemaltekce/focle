@@ -5,9 +5,9 @@
   import '@picocss/pico/css/pico.min.css'
 
   const sessionHistory = [
-    {id: 1, sessions: 3, minutes: 130},
-    {id: 2, sessions: 5, minutes: 210},
-    {id: 3, sessions: 4, minutes: 110},
+    { id: 1, sessions: 3, minutes: 130 },
+    { id: 2, sessions: 5, minutes: 210 },
+    { id: 3, sessions: 4, minutes: 110 },
   ]
 
   const timerMinutes = ref('52')
@@ -25,9 +25,15 @@
 <template>
   <div class="progress"></div>
   <div class="ellipse">
-    <svg class="ellipse__svg" width="940" height="940" viewBox="0 0 940 940" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      class="ellipse__svg"
+      width="940"
+      height="940"
+      viewBox="0 0 940 940"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <circle class="ellipse__svg__circle" cx="470" cy="470" r="470" />
-      <!-- <circle class="ellipse__svg__circle" cx="470" cy="470" r="470" fill="none" stroke="none" stroke-width="5px"/> -->
     </svg>
   </div>
 
@@ -37,14 +43,30 @@
     <div class="timer">
       <div class="timer__state">focus</div>
       <div class="timer__time">
-        <input class="timer__time__minutes" v-model="timerMinutes" maxlength="2" size="2" @blur="pad('min')"/>
+        <input
+          class="timer__time__minutes"
+          v-model="timerMinutes"
+          maxlength="2"
+          size="2"
+          @blur="pad('min')"
+        />
         :
-        <input class="timer__time__seconds" v-model="timerSeconds" maxlength="2" size="2" @blur="pad('sec')"/>
+        <input
+          class="timer__time__seconds"
+          v-model="timerSeconds"
+          maxlength="2"
+          size="2"
+          @blur="pad('sec')"
+        />
       </div>
     </div>
     <div class="control">
-      <div><img src="./assets/close.svg" class="control__button" alt="close" /></div>
-      <div><img src="./assets/play.svg" class="control__button" alt="play" /></div>
+      <div>
+        <img src="./assets/close.svg" class="control__button" alt="close" />
+      </div>
+      <div>
+        <img src="./assets/play.svg" class="control__button" alt="play" />
+      </div>
     </div>
   </main>
 
@@ -123,7 +145,7 @@
   .timer__time {
     display: flex;
     font-size: 2rem;
-    line-height: 1.2 ;
+    line-height: 1.2;
   }
 
   .timer__time input {
@@ -140,11 +162,11 @@
 
   .timer__time__minutes {
     text-align: center;
-    --line-height: 1 ;
+    --line-height: 1;
   }
 
   .timer__time__seconds {
     text-align: center;
-    --line-height: 1 ;
+    --line-height: 1;
   }
 </style>

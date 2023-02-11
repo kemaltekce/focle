@@ -1,5 +1,5 @@
 <script setup>
-  import { ref } from "@vue/reactivity"
+  import { ref } from '@vue/reactivity'
 
   defineProps({
     sessions: Number,
@@ -32,23 +32,25 @@
   </div>
   <div class="reflect" v-if="showReflect">
     <div class="reflect__container">
-      <div
-        class="reflect__container__close"
-        @click="showReflect = false"
-      >
+      <div class="reflect__container__close" @click="showReflect = false">
         <img src="../assets/close_grey.svg" class="close" alt="close" />
       </div>
       <div class="reflect__container__title">reflect</div>
       <div class="reflect__container__sessions">
         <div
-          v-for="item in sessionHistory" :key="item.id"
+          v-for="item in sessionHistory"
+          :key="item.id"
           class="reflect__container__sessions__single"
           :data-tooltip="
             Math.floor(item.minutes / 60) + ':' + (item.minutes % 60) + 'h'
           "
           data-placement="right"
         >
-          <div class="reflect__container__sessions__single__icon" v-for="n in item.sessions" :key="n">
+          <div
+            class="reflect__container__sessions__single__icon"
+            v-for="n in item.sessions"
+            :key="n"
+          >
             <img src="../assets/asterisk.svg" class="asterisk" alt="asterisk" />
           </div>
         </div>
@@ -58,11 +60,11 @@
 </template>
 
 <style scoped>
-  .asterisk{
+  .asterisk {
     height: 0.7rem;
   }
 
-  .close{
+  .close {
     height: 1rem;
   }
 
