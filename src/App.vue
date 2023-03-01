@@ -1,5 +1,5 @@
 <script setup>
-  import { ref } from '@vue/reactivity'
+  import { ref, watch } from 'vue'
   import Nav from './components/Nav.vue'
   import Modal from './components/Modal.vue'
   import '@picocss/pico/css/pico.min.css'
@@ -10,8 +10,65 @@
     { id: 3, sessions: 4, minutes: 110 },
   ]
 
+  const progress = ref(null)
+  const recommendedMinutes = 52
+  const recommendedAdditionalMinutes = 38
   const timerMinutes = ref('52')
   const timerSeconds = ref('00')
+  const initialTime = ref(0)
+  const initialAdditionalTime = ref(0)
+  const timerIntervalID = ref(null)
+  const currentTimeInSeconds = ref(null)
+  // can be initial, pausing, playing
+  const timerState = ref('initial')
+  // can be focus, idle, continue
+  const cycleState = ref('focus')
+
+
+  watch(currentTimeInSeconds, async (newTime, oldTime) => {
+    if (newTime === 0) {
+      clearInterval(timerIntervalID.value)
+      if (cycleState.value === 'focus') {
+        cycleState.value = 'continue'
+        timerState.value = 'initial'
+        setTimerStrings(recommendedAdditionalMinutes * 60)
+        progress.value.style.width = '0%'
+        return
+      }
+      if (cycleState.value === 'continue') {
+        cycleState.value = 'idle'
+        timerState.value = 'initial'
+        setTimerStrings(Math.round((initialTime.value + initialAdditionalTime.value) / 3))
+        progress.value.style.width = '0%'
+        return
+      }
+      if (cycleState.value === 'idle') {
+        cycleState.value = 'focus'
+        timerState.value = 'initial'
+        setTimerStrings(recommendedMinutes * 60)
+        progress.value.style.width = '0%'
+        return
+      }
+    }
+  })
+
+  function cancel() {
+    clearInterval(timerIntervalID.value)
+    if ((cycleState.value === 'focus') || (cycleState.value == 'continue')) {
+      cycleState.value = 'idle'
+      timerState.value = 'initial'
+      setTimerStrings(Math.round((initialTime.value + initialAdditionalTime.value - currentTimeInSeconds.value) / 3))
+      progress.value.style.width = '0%'
+      return
+    }
+    if (cycleState.value === 'idle') {
+      cycleState.value = 'focus'
+      timerState.value = 'initial'
+      setTimerStrings(recommendedMinutes * 60)
+      progress.value.style.width = '0%'
+      return
+    }
+  }
 
   function pad(time) {
     if (time === 'min') {
@@ -20,10 +77,45 @@
       timerSeconds.value = timerSeconds.value.padStart(2, '0')
     }
   }
+
+  function play(state) {
+    currentTimeInSeconds.value =
+      parseInt(timerMinutes.value) * 60 + parseInt(timerSeconds.value)
+    cycleState.value = state
+    if ((timerState.value === 'initial') && (state === 'focus')) {
+      initialTime.value = currentTimeInSeconds.value
+      var time = initialTime.value
+    }
+    if ((timerState.value === 'initial') && (state === 'continue')) {
+      initialAdditionalTime.value = currentTimeInSeconds.value
+      var time = initialAdditionalTime.value
+    }
+    timerState.value = 'playing'
+    timerIntervalID.value = setInterval(() => {
+      currentTimeInSeconds.value -= 1
+      setTimerStrings(currentTimeInSeconds.value)
+      progress.value.style.width =
+        ((time - currentTimeInSeconds.value) / time) * 100 + '%'
+    }, 1000)
+  }
+
+  function pause() {
+    timerState.value = 'pausing'
+    clearInterval(timerIntervalID.value)
+  }
+
+  function setTimerStrings(timeInSeconds) {
+    timerMinutes.value = Math.floor(timeInSeconds / 60)
+      .toString()
+      .padStart(2, '0')
+    timerSeconds.value = (timeInSeconds - timerMinutes.value * 60)
+      .toString()
+      .padStart(2, '0')
+  }
 </script>
 
 <template>
-  <div class="progress"></div>
+  <div class="progress" ref="progress"></div>
   <div class="ellipse">
     <svg
       class="ellipse__svg"
@@ -41,10 +133,11 @@
 
   <main>
     <div class="timer">
-      <div class="timer__state">focus</div>
+      <div class="timer__state" v-text="cycleState"></div>
       <div class="timer__time">
         <input
           class="timer__time__minutes"
+          :disabled="timerState !== 'initial'"
           v-model="timerMinutes"
           maxlength="2"
           size="2"
@@ -53,6 +146,7 @@
         :
         <input
           class="timer__time__seconds"
+          :disabled="timerState !== 'initial'"
           v-model="timerSeconds"
           maxlength="2"
           size="2"
@@ -61,11 +155,17 @@
       </div>
     </div>
     <div class="control">
-      <div>
-        <img src="./assets/close.svg" class="control__button" alt="close" />
+      <div v-if="timerState === 'playing'" @click="pause">
+        <img src="./assets/pause.svg" class="control__button" alt="pause" />
       </div>
-      <div>
+      <div v-else-if="timerState === 'continue'" @click="play('continue')">
+        <img src="./assets/fast-forward.svg" class="control__button" alt="continue" />
+      </div>
+      <div v-else @click="play(cycleState)">
         <img src="./assets/play.svg" class="control__button" alt="play" />
+      </div>
+      <div v-if="(cycleState !== 'focus') || (timerState !== 'initial')" @click="cancel">
+        <img src="./assets/close.svg" class="control__button" alt="close" />
       </div>
     </div>
   </main>
@@ -74,6 +174,12 @@
 </template>
 
 <style scoped>
+  input:disabled {
+    background-color: transparent;
+    color: #555555;
+    opacity: 1;
+  }
+
   main {
     display: flex;
     height: 100vh;
@@ -86,6 +192,7 @@
     margin-bottom: 3rem;
     padding: 0.5rem 1rem;
     width: 100%;
+    z-index: 20;
   }
 
   .ellipse {
@@ -93,7 +200,6 @@
     width: 100%;
     display: flex;
     bottom: -15vh;
-    /* z-index: -10; */
   }
 
   .ellipse__svg {
@@ -114,7 +220,7 @@
   .ellipse__svg__circle:hover {
     fill: #e8c2c5;
     stroke: #e8c2c5;
-    stroke-width: 20px;
+    stroke-width: 30px;
   }
 
   img {
@@ -124,7 +230,7 @@
   .progress {
     height: 4px;
     background-color: #e2cbcd;
-    width: 27%;
+    width: 0%;
   }
 
   .timer {
