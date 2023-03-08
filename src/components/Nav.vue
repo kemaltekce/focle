@@ -3,11 +3,20 @@
 
   defineProps({
     sessions: Number,
-    sessionMinutes: Number,
+    sessionSeconds: Number,
     sessionHistory: Object,
   })
 
   const showReflect = ref(false)
+
+  function secondsToHours(seconds) {
+    return Math.floor(seconds / 3600)
+  }
+
+  function secondsToRemainingMinutes(seconds) {
+    const hours = secondsToHours(seconds)
+    return Math.floor((seconds - hours * 3600) / 60)
+  }
 </script>
 
 <template>
@@ -16,8 +25,14 @@
     <div class="nav__element">
       <div
         class="nav__element__tracker"
+        v-if="sessions"
         :data-tooltip="
-          Math.floor(sessionMinutes / 60) + ':' + (sessionMinutes % 60) + 'h'
+          secondsToHours(sessionSeconds) +
+          ':' +
+          secondsToRemainingMinutes(sessionSeconds)
+            .toString()
+            .padStart(2, '0') +
+          'h'
         "
         data-placement="bottom"
       >
@@ -30,7 +45,7 @@
       </div>
     </div>
   </div>
-  <div class="reflect" v-if="showReflect">
+  <div class="reflect" v-if="showReflect && sessionHistory">
     <div class="reflect__container">
       <div class="reflect__container__close" @click="showReflect = false">
         <img src="../assets/close_grey.svg" class="close" alt="close" />
@@ -38,11 +53,22 @@
       <div class="reflect__container__title">reflect</div>
       <div class="reflect__container__sessions">
         <div
+          class="reflect__container__sessions__notfound"
+          v-if="sessionHistory.length === 0"
+        >
+          no past focus data found.
+        </div>
+        <div
           v-for="item in sessionHistory"
-          :key="item.id"
+          :key="item.date"
           class="reflect__container__sessions__single"
           :data-tooltip="
-            Math.floor(item.minutes / 60) + ':' + (item.minutes % 60) + 'h'
+            secondsToHours(item.seconds) +
+            ':' +
+            secondsToRemainingMinutes(item.seconds)
+              .toString()
+              .padStart(2, '0') +
+            'h'
           "
           data-placement="right"
         >
@@ -122,6 +148,11 @@
     font-size: 3rem;
     font-weight: 200;
     padding-bottom: 2rem;
+  }
+
+  .reflect__container__sessions__notfound {
+    color: #c0c0c0;
+    font-weight: 300;
   }
 
   .reflect__container__sessions__single {

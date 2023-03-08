@@ -1,12 +1,16 @@
-// All the Node.js APIs are available in the preload process.
-// It has the same sandbox as a Chrome extension.
-window.addEventListener('DOMContentLoaded', () => {
-  const replaceText = (selector, text) => {
-    const element = document.getElementById(selector)
-    if (element) element.innerText = text
-  }
+const { contextBridge, ipcRenderer } = require('electron')
 
-  for (const dependency of ['chrome', 'node', 'electron']) {
-    replaceText(`${dependency}-version`, process.versions[dependency])
-  }
-})
+const API = {
+  onTodayFocus: (callback) =>
+    ipcRenderer.on('on-today-focus', (event, args) => {
+      callback(args)
+    }),
+  onHistoryFocus: (callback) =>
+    ipcRenderer.on('on-history-focus', (event, args) => {
+      callback(args)
+    }),
+  saveFocus: (focusedSeconds) =>
+    ipcRenderer.invoke('save-focus', focusedSeconds),
+}
+
+contextBridge.exposeInMainWorld('api', API)

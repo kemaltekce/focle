@@ -4,11 +4,8 @@
   import Modal from './components/Modal.vue'
   import '@picocss/pico/css/pico.min.css'
 
-  const sessionHistory = [
-    { id: 1, sessions: 3, minutes: 130 },
-    { id: 2, sessions: 5, minutes: 210 },
-    { id: 3, sessions: 4, minutes: 110 },
-  ]
+  const todayFocus = ref(null)
+  const sessionHistory = ref(null)
 
   const progress = ref(null)
   const recommendedMinutes = 52
@@ -24,11 +21,19 @@
   // can be focus, idle, continue
   const cycleState = ref('focus')
 
+  window.api.onTodayFocus((data) => {
+    todayFocus.value = data
+  })
+  window.api.onHistoryFocus((data) => {
+    sessionHistory.value = data
+  })
 
+  // switch phases if timer reaches zero
   watch(currentTimeInSeconds, async (newTime, oldTime) => {
     if (newTime === 0) {
       clearInterval(timerIntervalID.value)
       if (cycleState.value === 'focus') {
+        // after focus comes continue
         cycleState.value = 'continue'
         timerState.value = 'initial'
         setTimerStrings(recommendedAdditionalMinutes * 60)
@@ -36,13 +41,21 @@
         return
       }
       if (cycleState.value === 'continue') {
+        // after continue comes idle
         cycleState.value = 'idle'
         timerState.value = 'initial'
-        setTimerStrings(Math.round((initialTime.value + initialAdditionalTime.value) / 3))
+        setTimerStrings(
+          Math.round((initialTime.value + initialAdditionalTime.value) / 3)
+        )
         progress.value.style.width = '0%'
+        saveFocus(initialTime.value + initialAdditionalTime.value)
+        // reset timer values
+        initialTime.value = 0
+        initialAdditionalTime.value = 0
         return
       }
       if (cycleState.value === 'idle') {
+        // after idle comes focus
         cycleState.value = 'focus'
         timerState.value = 'initial'
         setTimerStrings(recommendedMinutes * 60)
@@ -52,15 +65,44 @@
     }
   })
 
+  async function saveFocus(seconds) {
+    const data = await window.api.saveFocus(seconds)
+    todayFocus.value = data.focus
+    sessionHistory.value = data.history
+  }
+
   function cancel() {
     clearInterval(timerIntervalID.value)
-    if ((cycleState.value === 'focus') || (cycleState.value == 'continue')) {
+
+    // canceling focus and continue results in idle phase
+    if (cycleState.value === 'focus' || cycleState.value == 'continue') {
       cycleState.value = 'idle'
       timerState.value = 'initial'
-      setTimerStrings(Math.round((initialTime.value + initialAdditionalTime.value - currentTimeInSeconds.value) / 3))
+      setTimerStrings(
+        Math.round(
+          (initialTime.value +
+            initialAdditionalTime.value -
+            currentTimeInSeconds.value) /
+            3
+        )
+      )
       progress.value.style.width = '0%'
+      const focusedTime =
+        initialTime.value +
+        initialAdditionalTime.value -
+        currentTimeInSeconds.value
+      console.log(focusedTime)
+      // only save relevant time. Below one minute might be an accident
+      if (focusedTime >= 60) {
+        saveFocus(focusedTime)
+      }
+      // reset timer values
+      initialTime.value = 0
+      initialAdditionalTime.value = 0
       return
     }
+
+    // canceling idle results in focus phase
     if (cycleState.value === 'idle') {
       cycleState.value = 'focus'
       timerState.value = 'initial'
@@ -82,11 +124,13 @@
     currentTimeInSeconds.value =
       parseInt(timerMinutes.value) * 60 + parseInt(timerSeconds.value)
     cycleState.value = state
-    if ((timerState.value === 'initial') && (state === 'focus')) {
+    // keep track of initial focus time
+    if (timerState.value === 'initial' && state === 'focus') {
       initialTime.value = currentTimeInSeconds.value
       var time = initialTime.value
     }
-    if ((timerState.value === 'initial') && (state === 'continue')) {
+    // keep track of initial continued focus time
+    if (timerState.value === 'initial' && state === 'continue') {
       initialAdditionalTime.value = currentTimeInSeconds.value
       var time = initialAdditionalTime.value
     }
@@ -129,7 +173,12 @@
     </svg>
   </div>
 
-  <Nav :sessions="5" :sessionMinutes="104" :sessionHistory="sessionHistory" />
+  <Nav
+    v-if="todayFocus"
+    :sessions="todayFocus['sessions']"
+    :sessionSeconds="todayFocus['seconds']"
+    :sessionHistory="sessionHistory"
+  />
 
   <main>
     <div class="timer">
@@ -159,12 +208,19 @@
         <img src="./assets/pause.svg" class="control__button" alt="pause" />
       </div>
       <div v-else-if="timerState === 'continue'" @click="play('continue')">
-        <img src="./assets/fast-forward.svg" class="control__button" alt="continue" />
+        <img
+          src="./assets/fast-forward.svg"
+          class="control__button"
+          alt="continue"
+        />
       </div>
       <div v-else @click="play(cycleState)">
         <img src="./assets/play.svg" class="control__button" alt="play" />
       </div>
-      <div v-if="(cycleState !== 'focus') || (timerState !== 'initial')" @click="cancel">
+      <div
+        v-if="cycleState !== 'focus' || timerState !== 'initial'"
+        @click="cancel"
+      >
         <img src="./assets/close.svg" class="control__button" alt="close" />
       </div>
     </div>
