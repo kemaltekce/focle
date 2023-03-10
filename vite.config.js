@@ -35,6 +35,10 @@ export default defineConfig({
       closeBundle: () => {
         // start electron after build is finished
         electronProcess = childprocess.spawn('npm', ['run', 'electron:start'])
+        // get console output for electron process
+        electronProcess.stdout.on('data', (data) => {
+          console.log(`${data}`);
+        });
       }
     },
   ],

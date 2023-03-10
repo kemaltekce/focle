@@ -4,6 +4,7 @@ const path = require('path')
 const fs = require('fs')
 
 // global parameters
+let mainWindow
 const dataPath = path.join(__dirname, 'data')
 const focusFile = path.join(dataPath, 'focus.json')
 const historyFile = path.join(dataPath, 'history.json')
@@ -54,7 +55,7 @@ Menu.setApplicationMenu(null)
 // main window method
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     minWidth: 400,
@@ -129,6 +130,9 @@ ipcMain.handle('save-focus', async (event, focusedSeconds) => {
 })
 
 ipcMain.on('update-notes', (event, notes) => {
-  console.log('update')
   fs.writeFileSync(notesFile, notes)
+})
+
+ipcMain.on('show-window', () => {
+  mainWindow.show()
 })

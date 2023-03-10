@@ -15,6 +15,7 @@ const API = {
     }),
   saveFocus: (focusedSeconds) =>
     ipcRenderer.invoke('save-focus', focusedSeconds),
+  showWindow: () => ipcRenderer.send('show-window'),
   updateNotes: (notes) => ipcRenderer.send('update-notes', notes),
 }
 

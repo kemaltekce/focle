@@ -22,6 +22,9 @@
   // can be focus, idle, continue
   const cycleState = ref('focus')
 
+  // TODO download sound
+  const audio = new Audio('https://cdn.freesound.org/previews/409/409468_7952991-lq.mp3')
+
   window.api.onHistoryFocus((data) => {
     sessionHistory.value = data
   })
@@ -36,6 +39,8 @@
   watch(currentTimeInSeconds, async (newTime, oldTime) => {
     if (newTime === 0) {
       clearInterval(timerIntervalID.value)
+      audio.play()
+      window.api.showWindow()
       if (cycleState.value === 'focus') {
         // after focus comes continue
         cycleState.value = 'continue'
