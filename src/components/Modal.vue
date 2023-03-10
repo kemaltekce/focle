@@ -1,5 +1,14 @@
 <script setup>
-  import { ref } from '@vue/reactivity'
+  import { computed, ref } from 'vue'
+
+  const props = defineProps({
+    initialNotes: String
+  })
+
+  defineEmits(['updateNotes'])
+
+  // computed cause notes have to be updated once the initial notes are loaded
+  const notes = computed(() => props.initialNotes)
 
   const displayModal = ref(false)
 </script>
@@ -41,10 +50,11 @@
         </div>
         <textarea
           class="modal__content__textarea"
-          name="notes"
           id=""
           placeholder="dump vague thoughts..."
           spellcheck="false"
+          v-model="notes"
+          @input="$emit('updateNotes', $event.target.value)"
         ></textarea>
       </div>
     </div>

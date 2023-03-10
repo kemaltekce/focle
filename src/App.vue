@@ -4,8 +4,9 @@
   import Modal from './components/Modal.vue'
   import '@picocss/pico/css/pico.min.css'
 
-  const todayFocus = ref(null)
+  const initialNotes = ref('')
   const sessionHistory = ref(null)
+  const todayFocus = ref(null)
 
   const progress = ref(null)
   const recommendedMinutes = 52
@@ -21,11 +22,14 @@
   // can be focus, idle, continue
   const cycleState = ref('focus')
 
-  window.api.onTodayFocus((data) => {
-    todayFocus.value = data
-  })
   window.api.onHistoryFocus((data) => {
     sessionHistory.value = data
+  })
+  window.api.onNotes((data) => {
+    initialNotes.value = data
+  })
+  window.api.onTodayFocus((data) => {
+    todayFocus.value = data
   })
 
   // switch phases if timer reaches zero
@@ -71,6 +75,11 @@
     sessionHistory.value = data.history
   }
 
+  function updateNotes(notes) {
+    window.api.updateNotes(notes)
+    initialNotes.value = notes
+  }
+
   function cancel() {
     clearInterval(timerIntervalID.value)
 
@@ -91,7 +100,6 @@
         initialTime.value +
         initialAdditionalTime.value -
         currentTimeInSeconds.value
-      console.log(focusedTime)
       // only save relevant time. Below one minute might be an accident
       if (focusedTime >= 60) {
         saveFocus(focusedTime)
@@ -226,7 +234,7 @@
     </div>
   </main>
 
-  <Modal />
+  <Modal :initialNotes="initialNotes" @update-notes="updateNotes"/>
 </template>
 
 <style scoped>

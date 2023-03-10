@@ -1,19 +1,13 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu } = require('electron')
 const path = require('path')
-const electronReload = require('electron-reload')
 const fs = require('fs')
-
-electronReload(__dirname, {
-  electron: path.join(__dirname, 'node_modules', '.bin', 'electron'),
-  hardResetMethod: 'exit',
-  ignored: path.join(__dirname, 'data', '*'),
-})
 
 // global parameters
 const dataPath = path.join(__dirname, 'data')
 const focusFile = path.join(dataPath, 'focus.json')
 const historyFile = path.join(dataPath, 'history.json')
+const notesFile = path.join(dataPath, 'notes.txt')
 
 // methods
 function getToday() {
@@ -41,6 +35,9 @@ function createDataFiles() {
   if (!fs.existsSync(historyFile)) {
     fs.writeFileSync(historyFile, '[]')
   }
+  if (!fs.existsSync(notesFile)) {
+    fs.writeFileSync(notesFile, '')
+  }
 }
 
 function checkFocusDataDate() {
@@ -50,6 +47,9 @@ function checkFocusDataDate() {
     fs.writeFileSync(focusFile, JSON.stringify(getDefaultFocusData()))
   }
 }
+
+// menu
+Menu.setApplicationMenu(null)
 
 // main window method
 const createWindow = () => {
@@ -73,9 +73,11 @@ const createWindow = () => {
   mainWindow.webContents.on('did-finish-load', () => {
     const focusData = fs.readFileSync(focusFile)
     const historyData = fs.readFileSync(historyFile)
+    const notes = fs.readFileSync(notesFile, "utf8")
 
     mainWindow.webContents.send('on-today-focus', JSON.parse(focusData))
     mainWindow.webContents.send('on-history-focus', JSON.parse(historyData))
+    mainWindow.webContents.send('on-notes', notes)
   })
 }
 
@@ -124,4 +126,9 @@ ipcMain.handle('save-focus', async (event, focusedSeconds) => {
   fs.writeFileSync(historyFile, JSON.stringify(historyData))
 
   return { focus: focusData, history: historyData }
+})
+
+ipcMain.on('update-notes', (event, notes) => {
+  console.log('update')
+  fs.writeFileSync(notesFile, notes)
 })
