@@ -2,7 +2,9 @@
   import { ref, watch } from 'vue'
   import Nav from './components/Nav.vue'
   import Modal from './components/Modal.vue'
+
   import '@picocss/pico/css/pico.min.css'
+  import soundUrl from './assets/sound.wav'
 
   const initialNotes = ref('')
   const sessionHistory = ref(null)
@@ -22,8 +24,7 @@
   // can be focus, idle, continue
   const cycleState = ref('focus')
 
-  // TODO download sound
-  const audio = new Audio('https://cdn.freesound.org/previews/409/409468_7952991-lq.mp3')
+  const audio = new Audio(soundUrl)
 
   window.api.onHistoryFocus((data) => {
     sessionHistory.value = data
@@ -40,6 +41,7 @@
     if (newTime === 0) {
       clearInterval(timerIntervalID.value)
       audio.play()
+      window.api.showTime('')
       window.api.showWindow()
       if (cycleState.value === 'focus') {
         // after focus comes continue
@@ -87,6 +89,7 @@
 
   function cancel() {
     clearInterval(timerIntervalID.value)
+    window.api.showTime('')
 
     // canceling focus and continue results in idle phase
     if (cycleState.value === 'focus' || cycleState.value == 'continue') {
@@ -153,6 +156,7 @@
       setTimerStrings(currentTimeInSeconds.value)
       progress.value.style.width =
         ((time - currentTimeInSeconds.value) / time) * 100 + '%'
+      window.api.showTime(' ' + timerMinutes.value + ':' + timerSeconds.value)
     }, 1000)
   }
 
@@ -239,7 +243,7 @@
     </div>
   </main>
 
-  <Modal :initialNotes="initialNotes" @update-notes="updateNotes"/>
+  <Modal :initialNotes="initialNotes" @update-notes="updateNotes" />
 </template>
 
 <style scoped>

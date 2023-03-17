@@ -1,10 +1,11 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, ipcMain, Menu } = require('electron')
+const { app, BrowserWindow, ipcMain, Menu, Tray } = require('electron')
 const path = require('path')
 const fs = require('fs')
 
 // global parameters
 let mainWindow
+let tray
 const dataPath = path.join(__dirname, 'data')
 const focusFile = path.join(dataPath, 'focus.json')
 const historyFile = path.join(dataPath, 'history.json')
@@ -74,11 +75,20 @@ const createWindow = () => {
   mainWindow.webContents.on('did-finish-load', () => {
     const focusData = fs.readFileSync(focusFile)
     const historyData = fs.readFileSync(historyFile)
-    const notes = fs.readFileSync(notesFile, "utf8")
+    const notes = fs.readFileSync(notesFile, 'utf8')
 
     mainWindow.webContents.send('on-today-focus', JSON.parse(focusData))
     mainWindow.webContents.send('on-history-focus', JSON.parse(historyData))
     mainWindow.webContents.send('on-notes', notes)
+  })
+}
+
+// tray method
+const createTray = () => {
+  tray = new Tray(path.join(__dirname, 'icons/circle.png'))
+  tray.setIgnoreDoubleClickEvents(true)
+  tray.on('click', () => {
+    mainWindow.show()
   })
 }
 
@@ -89,6 +99,7 @@ app.whenReady().then(() => {
   createDataFiles()
   checkFocusDataDate()
   createWindow()
+  createTray()
 
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
@@ -135,4 +146,8 @@ ipcMain.on('update-notes', (event, notes) => {
 
 ipcMain.on('show-window', () => {
   mainWindow.show()
+})
+
+ipcMain.on('show-time', (event, time) => {
+  tray.setTitle(time)
 })

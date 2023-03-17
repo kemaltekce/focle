@@ -11,8 +11,8 @@ export default defineConfig({
   base: path.resolve(__dirname, './dist'),
   build: {
     watch: {
-      include: 'src/**'
-    }
+      include: 'src/**',
+    },
   },
   plugins: [
     vue(),
@@ -21,14 +21,14 @@ export default defineConfig({
       buildStart() {
         // kill electron to restart at the end of build
         if (electronProcess) {
-          electronProcess.removeAllListeners('exit');
-          electronProcess.kill();
-          electronProcess = null;
+          electronProcess.removeAllListeners('exit')
+          electronProcess.kill()
+          electronProcess = null
         }
         //additionally, watch electrons main and preload files
         this.addWatchFile(path.resolve(__dirname, 'main.js'))
         this.addWatchFile(path.resolve(__dirname, 'preload.js'))
-      }
+      },
     },
     {
       name: 'start-electron',
@@ -37,9 +37,9 @@ export default defineConfig({
         electronProcess = childprocess.spawn('npm', ['run', 'electron:start'])
         // get console output for electron process
         electronProcess.stdout.on('data', (data) => {
-          console.log(`${data}`);
-        });
-      }
+          console.log(`${data}`)
+        })
+      },
     },
   ],
 })

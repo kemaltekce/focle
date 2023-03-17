@@ -2,7 +2,7 @@
   import { computed, ref } from 'vue'
 
   const props = defineProps({
-    initialNotes: String
+    initialNotes: String,
   })
 
   defineEmits(['updateNotes'])
