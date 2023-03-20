@@ -25,6 +25,11 @@
   const cycleState = ref('focus')
 
   const audio = new Audio(soundUrl)
+  const audioLoop = new Audio(
+    'https://cdn.freesound.org/previews/629/629175_12574855-lq.mp3'
+  )
+  audioLoop.loop = true
+  const loopPlaying = ref(false)
 
   window.api.onHistoryFocus((data) => {
     sessionHistory.value = data
@@ -173,12 +178,22 @@
       .toString()
       .padStart(2, '0')
   }
+
+  function loopMusic() {
+    if (loopPlaying.value) {
+      audioLoop.pause()
+    } else {
+      audioLoop.play()
+    }
+    loopPlaying.value = !loopPlaying.value
+  }
 </script>
 
 <template>
   <div class="progress" ref="progress"></div>
   <div class="ellipse">
     <svg
+      @click="loopMusic"
       class="ellipse__svg"
       width="940"
       height="940"
