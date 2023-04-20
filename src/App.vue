@@ -4,7 +4,8 @@
   import Modal from './components/Modal.vue'
 
   import '@picocss/pico/css/pico.min.css'
-  import soundUrl from './assets/sound.wav'
+  import soundUrl from './assets/sound.mp3'
+  import backgroundSoundUrl from './assets/background.mp3'
 
   const initialNotes = ref('')
   const sessionHistory = ref(null)
@@ -25,9 +26,7 @@
   const cycleState = ref('focus')
 
   const audio = new Audio(soundUrl)
-  const audioLoop = new Audio(
-    'https://cdn.freesound.org/previews/629/629175_12574855-lq.mp3'
-  )
+  const audioLoop = new Audio(backgroundSoundUrl)
   audioLoop.loop = true
   const loopPlaying = ref(false)
 
@@ -45,6 +44,7 @@
   watch(currentTimeInSeconds, async (newTime, oldTime) => {
     if (newTime === 0) {
       clearInterval(timerIntervalID.value)
+      audioLoop.pause()
       audio.play()
       window.api.showTime('')
       window.api.showWindow()
@@ -193,7 +193,6 @@
   <div class="progress" ref="progress"></div>
   <div class="ellipse">
     <svg
-      @click="loopMusic"
       class="ellipse__svg"
       width="940"
       height="940"
@@ -201,7 +200,9 @@
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <circle class="ellipse__svg__circle" cx="470" cy="470" r="470" />
+      <circle
+        @click="loopMusic"
+        class="ellipse__svg__circle" cx="470" cy="470" r="470" />
     </svg>
   </div>
 

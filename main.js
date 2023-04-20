@@ -61,6 +61,7 @@ const createWindow = () => {
     height: 600,
     minWidth: 400,
     minHeight: 400,
+    icon: path.join(__dirname, 'icons/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -85,28 +86,47 @@ const createWindow = () => {
 
 // tray method
 const createTray = () => {
-  tray = new Tray(path.join(__dirname, 'icons/circle.png'))
+  tray = new Tray(path.join(__dirname, 'icons/focle_icon.png'))
   tray.setIgnoreDoubleClickEvents(true)
   tray.on('click', () => {
-    mainWindow.show()
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    else mainWindow.show()
   })
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  createDataFiles()
-  checkFocusDataDate()
-  createWindow()
-  createTray()
+// It also checks if a single instance is already running. Instead of creating
+// a new instance, it will load the first one.
+const gotTheLock = app.requestSingleInstanceLock()
 
-  app.on('activate', () => {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+if (!gotTheLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    // tried to run a second instance, we should focus our window.
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
   })
-})
+  // Create myWindow, load the rest of the app, etc...
+  app.whenReady().then(() => {
+    createDataFiles()
+    checkFocusDataDate()
+    createWindow()
+    createTray()
+
+    app.on('activate', () => {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
+  })
+}
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
