@@ -1,11 +1,15 @@
 <script setup>
-  import { ref, watch } from 'vue'
+  import { onMounted, ref, watch } from 'vue'
   import Nav from './components/Nav.vue'
   import Modal from './components/Modal.vue'
 
   import '@picocss/pico/css/pico.min.css'
   import soundUrl from './assets/sound.mp3'
   import backgroundSoundUrl from './assets/background.mp3'
+
+  const inputTimerMinutes = ref(null)
+  const inputTimerSeconds = ref(null)
+  const model = ref(null)
 
   const initialNotes = ref('')
   const sessionHistory = ref(null)
@@ -28,6 +32,7 @@
   const audio = new Audio(soundUrl)
   const audioLoop = new Audio(backgroundSoundUrl)
   audioLoop.loop = true
+  audioLoop.volume = 0.3
   const loopPlaying = ref(false)
 
   window.api.onHistoryFocus((data) => {
@@ -81,6 +86,43 @@
     }
   })
 
+  // control via keyboard shortcuts
+  onMounted(() => {
+    document.addEventListener('keydown', processKeyPress)
+  })
+
+  function processKeyPress(e) {
+    // meta + m to play/pause background music
+    if (e.keyCode === 77 && e.metaKey) {
+      loopMusic()
+    }
+    // focus on minutes
+    if (e.keyCode === 74 && e.metaKey) {
+      inputTimerMinutes.value.focus()
+    }
+    // focus on seconds
+    if (e.keyCode === 75 && e.metaKey) {
+      inputTimerSeconds.value.focus()
+    }
+    // close focus
+    if (e.keyCode === 27) {
+      document.activeElement.blur()
+      model.value.closeModel()
+    }
+    // open/close notes
+    if (e.keyCode === 78 && e.metaKey) {
+      model.value.toggleModel()
+    }
+    if (e.keyCode === 80 && e.metaKey) {
+      if (timerState.value === 'playing') {
+        pause()
+      } else if (timerState.value === 'continue') {
+        play('continue')
+      } else play(cycleState.value)
+    }
+  }
+
+  // methods for communication with backend
   async function saveFocus(seconds) {
     const data = await window.api.saveFocus(seconds)
     todayFocus.value = data.focus
@@ -92,6 +134,7 @@
     initialNotes.value = notes
   }
 
+  // methods for frontend
   function cancel() {
     clearInterval(timerIntervalID.value)
     window.api.showTime('')
@@ -202,7 +245,11 @@
     >
       <circle
         @click="loopMusic"
-        class="ellipse__svg__circle" cx="470" cy="470" r="470" />
+        class="ellipse__svg__circle"
+        cx="470"
+        cy="470"
+        r="470"
+      />
     </svg>
   </div>
 
@@ -223,6 +270,7 @@
           v-model="timerMinutes"
           maxlength="2"
           size="2"
+          ref="inputTimerMinutes"
           @blur="pad('min')"
         />
         :
@@ -232,6 +280,7 @@
           v-model="timerSeconds"
           maxlength="2"
           size="2"
+          ref="inputTimerSeconds"
           @blur="pad('sec')"
         />
       </div>
@@ -259,7 +308,7 @@
     </div>
   </main>
 
-  <Modal :initialNotes="initialNotes" @update-notes="updateNotes" />
+  <Modal :initialNotes="initialNotes" @update-notes="updateNotes" ref="model" />
 </template>
 
 <style scoped>

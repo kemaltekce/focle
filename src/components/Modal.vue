@@ -6,21 +6,35 @@
   })
 
   defineEmits(['updateNotes'])
+  defineExpose({ closeModel, toggleModel })
 
   // computed cause notes have to be updated once the initial notes are loaded
   const notes = computed(() => props.initialNotes)
 
   const displayModal = ref(false)
+  const notesTextarea = ref(null)
+
+  // methods
+  function toggleModel() {
+    displayModal.value = !displayModal.value
+    if (displayModal.value) {
+      notesTextarea.value.focus()
+    } else {
+      notesTextarea.value.blur()
+    }
+  }
+
+  function closeModel() {
+    displayModal.value = false
+  }
 </script>
 
 <template>
-  <!-- <div class="modal">^</div> -->
-
   <div class="modal">
     <div
       class="modal__background"
       v-if="displayModal"
-      @click="displayModal = false"
+      @click="closeModel"
     ></div>
     <div
       class="modal__card"
@@ -29,10 +43,7 @@
       }"
     >
       <div class="modal__content">
-        <div
-          class="modal__content__button"
-          @click="displayModal = !displayModal"
-        >
+        <div class="modal__content__button" @click="toggleModel">
           <div>
             <img
               v-if="displayModal"
@@ -53,6 +64,7 @@
           id=""
           placeholder="dump vague thoughts..."
           spellcheck="false"
+          ref="notesTextarea"
           v-model="notes"
           @input="$emit('updateNotes', $event.target.value)"
         ></textarea>
