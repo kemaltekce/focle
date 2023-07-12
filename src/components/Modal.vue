@@ -117,6 +117,7 @@
     align-items: center;
     color: #c0c0c0;
     padding: 0.5rem;
+    height: 100%;
   }
 
   .modal__content__button {

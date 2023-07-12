@@ -82,6 +82,13 @@ const createWindow = () => {
     mainWindow.webContents.send('on-history-focus', JSON.parse(historyData))
     mainWindow.webContents.send('on-notes', notes)
   })
+
+  // also check focus data date if app not reopened every day but kept open
+  mainWindow.on('focus', () => {
+    checkFocusDataDate()
+    const focusData = fs.readFileSync(focusFile)
+    mainWindow.webContents.send('on-today-focus', JSON.parse(focusData))
+  })
 }
 
 // tray method

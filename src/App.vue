@@ -15,6 +15,8 @@
   const sessionHistory = ref(null)
   const todayFocus = ref(null)
 
+  const time = ref(null)
+  const lastUpdateTime = ref(null)
   const progress = ref(null)
   const recommendedMinutes = 52
   const recommendedAdditionalMinutes = 38
@@ -22,8 +24,9 @@
   const timerSeconds = ref('00')
   const initialTime = ref(0)
   const initialAdditionalTime = ref(0)
-  const timerIntervalID = ref(null)
+  const TimeoutID = ref(null)
   const currentTimeInSeconds = ref(null)
+  const currentTimeInMilliseconds = ref(null)
   // can be initial, pausing, playing
   const timerState = ref('initial')
   // can be focus, idle, continue
@@ -48,7 +51,7 @@
   // switch phases if timer reaches zero
   watch(currentTimeInSeconds, async (newTime, oldTime) => {
     if (newTime === 0) {
-      clearInterval(timerIntervalID.value)
+      clearTimeout(TimeoutID.value)
       audioLoop.pause()
       audio.play()
       window.api.showTime('')
@@ -66,7 +69,9 @@
         cycleState.value = 'idle'
         timerState.value = 'initial'
         setTimerStrings(
-          Math.round((initialTime.value + initialAdditionalTime.value) / 3)
+          floorToSixtyIncrements(
+            Math.round((initialTime.value + initialAdditionalTime.value) / 3)
+          )
         )
         progress.value.style.width = '0%'
         saveFocus(initialTime.value + initialAdditionalTime.value)
@@ -136,7 +141,7 @@
 
   // methods for frontend
   function cancel() {
-    clearInterval(timerIntervalID.value)
+    clearTimeout(TimeoutID.value)
     window.api.showTime('')
 
     // canceling focus and continue results in idle phase
@@ -144,11 +149,13 @@
       cycleState.value = 'idle'
       timerState.value = 'initial'
       setTimerStrings(
-        Math.round(
-          (initialTime.value +
-            initialAdditionalTime.value -
-            currentTimeInSeconds.value) /
-            3
+        floorToSixtyIncrements(
+          Math.round(
+            (initialTime.value +
+              initialAdditionalTime.value -
+              currentTimeInSeconds.value) /
+              3
+          )
         )
       )
       progress.value.style.width = '0%'
@@ -156,8 +163,8 @@
         initialTime.value +
         initialAdditionalTime.value -
         currentTimeInSeconds.value
-      // only save relevant time. Below one minute might be an accident
-      if (focusedTime >= 60) {
+      // only save relevant time. Below two minute might be an accident
+      if (focusedTime >= 120) {
         saveFocus(focusedTime)
       }
       // reset timer values
@@ -191,26 +198,44 @@
     // keep track of initial focus time
     if (timerState.value === 'initial' && state === 'focus') {
       initialTime.value = currentTimeInSeconds.value
-      var time = initialTime.value
+      time.value = initialTime.value
+    }
+    // keep track of idle time
+    if (timerState.value === 'initial' && state === 'idle') {
+      time.value = currentTimeInSeconds.value
     }
     // keep track of initial continued focus time
     if (timerState.value === 'initial' && state === 'continue') {
       initialAdditionalTime.value = currentTimeInSeconds.value
-      var time = initialAdditionalTime.value
+      time.value = initialAdditionalTime.value
     }
     timerState.value = 'playing'
-    timerIntervalID.value = setInterval(() => {
-      currentTimeInSeconds.value -= 1
+    lastUpdateTime.value = new Date().getTime()
+    currentTimeInMilliseconds.value = currentTimeInSeconds.value * 1000
+    runTimer()
+  }
+
+  function runTimer() {
+    let currentUpdateTime = new Date().getTime()
+    let timeDiff = currentUpdateTime - lastUpdateTime.value
+    if (timeDiff >= 1000) {
+      currentTimeInMilliseconds.value -= timeDiff
+      currentTimeInSeconds.value = Math.max(
+        Math.round(currentTimeInMilliseconds.value / 1000),
+        0
+      )
       setTimerStrings(currentTimeInSeconds.value)
       progress.value.style.width =
-        ((time - currentTimeInSeconds.value) / time) * 100 + '%'
+        ((time.value - currentTimeInSeconds.value) / time.value) * 100 + '%'
       window.api.showTime(' ' + timerMinutes.value + ':' + timerSeconds.value)
-    }, 1000)
+      lastUpdateTime.value = currentUpdateTime
+    }
+    TimeoutID.value = setTimeout(runTimer, 200)
   }
 
   function pause() {
     timerState.value = 'pausing'
-    clearInterval(timerIntervalID.value)
+    clearTimeout(TimeoutID.value)
   }
 
   function setTimerStrings(timeInSeconds) {
@@ -229,6 +254,10 @@
       audioLoop.play()
     }
     loopPlaying.value = !loopPlaying.value
+  }
+
+  function floorToSixtyIncrements(number) {
+    return Math.max(number - (number % 60), 60)
   }
 </script>
 
