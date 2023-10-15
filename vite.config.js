@@ -8,7 +8,7 @@ let electronProcess = null
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: path.resolve(__dirname, './dist'),
+  base: '',
   build: {
     watch: {
       include: 'src/**',
